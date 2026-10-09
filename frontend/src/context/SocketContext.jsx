@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { useAuthContext } from "./AuthContext";
 import { io } from "socket.io-client";
+import { API_BASE_URL } from "../utils/api";
 
 const SocketContext = createContext();
 
@@ -16,7 +17,9 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (authUser) {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.MODE === "development" ? "http://localhost:5000" : "/");
+      const backendUrl =
+        API_BASE_URL ||
+        (import.meta.env.MODE === "development" ? "http://localhost:5000" : "/");
       const socket = io(backendUrl, {
         query: { userId: authUser._id },
         autoConnect: true,
