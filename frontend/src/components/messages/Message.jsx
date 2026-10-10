@@ -3,6 +3,9 @@ import { useAuthContext } from "../../context/AuthContext";
 import { extractTime } from "../../utils/extractTime";
 import useConversation from "../../zustand/useConversation";
 import Avatar from "../Avatar";
+import VoicePlayer from "./VoicePlayer";
+import PollMessage from "./PollMessage";
+import LocationMessage from "./LocationMessage";
 import { BsCheck, BsCheckAll, BsDownload } from "react-icons/bs";
 import { BiTime } from "react-icons/bi";
 
@@ -18,11 +21,11 @@ const Message = ({ message }) => {
   const senderName = fromMe
     ? authUser?.fullName || authUser?.username
     : selectedConversation?.fullName || selectedConversation?.username;
-  const bubbleBgColor = fromMe ? "bg-blue-600" : "bg-slate-700";
 
+  const bubbleBgColor = fromMe ? "bg-blue-600" : "bg-slate-800";
   const shakeClass = message.shouldShake ? "shake" : "";
 
-  const handleDownload = async (e) => {
+  const handleDownloadImage = async (e) => {
     e.stopPropagation();
     try {
       const response = await fetch(message.image);
@@ -66,7 +69,7 @@ const Message = ({ message }) => {
   };
 
   return (
-    <div className={`chat ${chatClassName} my-1`}>
+    <div className={`chat ${chatClassName} my-1.5`}>
       <Avatar
         className="chat-image"
         name={senderName}
@@ -75,21 +78,39 @@ const Message = ({ message }) => {
       />
 
       <div
-        className={`chat-bubble text-white ${bubbleBgColor} ${shakeClass} p-2.5 max-w-[75%] md:max-w-md rounded-2xl shadow-sm`}
+        className={`chat-bubble text-white ${bubbleBgColor} ${shakeClass} p-2.5 max-w-[88%] sm:max-w-[75%] md:max-w-md rounded-2xl shadow-md border border-slate-700/50 break-words`}
       >
-        {/* Render Cloudinary Image if present */}
+        {/* 1. Voice Note Message */}
+        {message.messageType === "voice" && message.audio && (
+          <VoicePlayer
+            audioUrl={message.audio}
+            duration={message.audioDuration}
+          />
+        )}
+
+        {/* 2. WhatsApp Poll Message */}
+        {message.messageType === "poll" && message.poll && (
+          <PollMessage messageId={message._id} poll={message.poll} />
+        )}
+
+        {/* 3. Location Message */}
+        {message.messageType === "location" && message.location && (
+          <LocationMessage location={message.location} />
+        )}
+
+        {/* 4. Image Attachment */}
         {message.image && (
-          <div className="relative group mb-1.5 overflow-hidden rounded-xl bg-black/20">
+          <div className="relative group mb-1.5 overflow-hidden rounded-xl bg-black/30">
             <img
               src={message.image}
               alt="Shared attachment"
-              className="max-h-72 w-full object-cover rounded-xl transition duration-200 group-hover:scale-[1.02]"
+              className="max-h-60 sm:max-h-80 w-full object-cover rounded-xl transition duration-200 group-hover:scale-[1.02]"
               loading="lazy"
             />
-            {/* Download Button Overlay */}
+            {/* 1-Click Download Button */}
             <button
-              onClick={handleDownload}
-              className="absolute bottom-2 right-2 p-2 bg-black/60 hover:bg-black/90 text-white rounded-full backdrop-blur-md opacity-90 transition-all shadow-md group-hover:opacity-100"
+              onClick={handleDownloadImage}
+              className="absolute bottom-2 right-2 p-2 bg-black/70 hover:bg-black/90 text-white rounded-full backdrop-blur-md opacity-90 transition-all shadow-md group-hover:opacity-100"
               title="Download photo"
             >
               <BsDownload className="w-3.5 h-3.5" />
@@ -97,15 +118,15 @@ const Message = ({ message }) => {
           </div>
         )}
 
-        {/* Message text */}
-        {message.message && (
+        {/* 5. Text Message (if present) */}
+        {message.message && message.messageType !== "poll" && (
           <p className="text-sm whitespace-pre-wrap break-words leading-relaxed px-1">
             {message.message}
           </p>
         )}
       </div>
 
-      {/* Footer with time and status ticks */}
+      {/* Footer with timestamp and status ticks */}
       <div className="chat-footer text-gray-400 text-[11px] flex items-center gap-1 mt-0.5 px-1">
         <span>{formattedTime}</span>
         {renderStatus()}

@@ -16,6 +16,8 @@ const Messages = () => {
   const prevScrollHeightRef = useRef(0);
   const isPrependRef = useRef(false);
 
+  const messageList = Array.isArray(messages) ? messages : [];
+
   // Auto-scroll to bottom on new message send/receive
   useEffect(() => {
     if (!isPrependRef.current) {
@@ -46,7 +48,7 @@ const Messages = () => {
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="px-4 flex-1 overflow-auto"
+      className="px-2 sm:px-4 py-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
     >
       {/* Top loader when fetching older messages via infinite scroll */}
       {loadingMore && (
@@ -58,17 +60,17 @@ const Messages = () => {
       {/* Initial load skeleton */}
       {loading && [...Array(3)].map((_, idx) => <MessageSkeleton key={idx} />)}
 
-      {/* Render messages */}
+      {/* Render messages safely */}
       {!loading &&
-        messages.length > 0 &&
-        messages.map((message) => (
+        messageList.length > 0 &&
+        messageList.map((message) => (
           <div key={message._id} ref={lastMessageRef}>
             <Message message={message} />
           </div>
         ))}
 
       {/* Empty conversation placeholder */}
-      {!loading && messages.length === 0 && (
+      {!loading && messageList.length === 0 && (
         <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
           <p>Send a message to start the conversation!</p>
         </div>

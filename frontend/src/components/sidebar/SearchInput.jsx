@@ -11,52 +11,44 @@ const SearchInput = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!search) return;
-    if (search.length < 3) {
-      return toast.error("Search term must be at least 3 characters long");
-    }
+    if (!search.trim()) return;
 
-    const conversation = conversations.find((c) =>
-      c.fullName.toLowerCase().includes(search.toLowerCase())
+    const term = search.trim().toLowerCase();
+    const conversation = conversations.find(
+      (c) =>
+        c.fullName?.toLowerCase().includes(term) ||
+        c.username?.toLowerCase().includes(term)
     );
 
     if (conversation) {
       setSelectedConversation(conversation);
       setSearch("");
-    } else toast.error("No such user found!");
+    } else {
+      toast.error("No user found matching search");
+    }
   };
+
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="relative flex items-center w-full">
+      <IoSearchSharp className="absolute left-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
       <input
         type="text"
-        placeholder="Search…"
-        className="input input-bordered rounded-full"
+        placeholder="Search people..."
+        className="w-full pl-9 pr-8 py-2 bg-slate-850/90 border border-slate-700/70 rounded-xl text-xs text-white placeholder-gray-400 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/50 transition shadow-inner"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <button type="submit" className="btn btn-circle bg-sky-500 text-white">
-        <IoSearchSharp className="w-6 h-6 outline-none" />
-      </button>
+      {search && (
+        <button
+          type="button"
+          onClick={() => setSearch("")}
+          className="absolute right-2.5 text-gray-400 hover:text-white text-xs p-0.5 rounded-full"
+        >
+          ✕
+        </button>
+      )}
     </form>
   );
 };
+
 export default SearchInput;
-
-// STARTER CODE SNIPPET
-// import { IoSearchSharp } from "react-icons/io5";
-
-// const SearchInput = () => {
-//   return (
-//     <form className="flex items-center gap-2">
-//       <input
-//         type="text"
-//         placeholder="Search…"
-//         className="input input-bordered rounded-full"
-//       />
-//       <button type="submit" className="btn btn-circle bg-sky-500 text-white">
-//         <IoSearchSharp className="w-6 h-6 outline-none" />
-//       </button>
-//     </form>
-//   );
-// };
-// export default SearchInput;

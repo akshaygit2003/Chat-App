@@ -5,7 +5,7 @@ import Conversation from "./Conversation";
 const Conversations = () => {
   const { loading, conversations } = useGetConversations();
   return (
-    <div className="py-2 flex flex-col overflow-auto">
+    <div className="py-2 flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden">
       {conversations.map((conversation, idx) => (
         <Conversation
           key={conversation._id}

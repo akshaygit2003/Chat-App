@@ -6,7 +6,8 @@ dotenv.config();
 export const uploadToCloudinary = async (
   buffer,
   mimetype = "image/jpeg",
-  folder = "chat-app-avatars"
+  folder = "chat-app-avatars",
+  resourceType = "auto"
 ) => {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
@@ -21,14 +22,19 @@ export const uploadToCloudinary = async (
     });
 
     return new Promise((resolve, reject) => {
+      const uploadOptions = {
+        folder,
+        resource_type: resourceType,
+      };
+
+      if (resourceType === "image" && folder === "chat-app-avatars") {
+        uploadOptions.transformation = [
+          { width: 400, height: 400, crop: "fill", gravity: "face" },
+        ];
+      }
+
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: "image",
-          transformation: [
-            { width: 400, height: 400, crop: "fill", gravity: "face" },
-          ],
-        },
+        uploadOptions,
         (error, result) => {
           if (error) {
             console.error("Cloudinary upload error:", error);

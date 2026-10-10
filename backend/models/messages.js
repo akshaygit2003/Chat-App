@@ -1,5 +1,19 @@
 import mongoose from "mongoose";
 
+const pollOptionSchema = new mongoose.Schema({
+  text: {
+    type: String,
+    required: true,
+  },
+  votes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
+});
+
 const messageSchema = new mongoose.Schema(
   {
     conversationId: {
@@ -19,6 +33,11 @@ const messageSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    messageType: {
+      type: String,
+      enum: ["text", "image", "voice", "location", "poll"],
+      default: "text",
+    },
     message: {
       type: String,
       default: "",
@@ -26,6 +45,23 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
       default: "",
+    },
+    audio: {
+      type: String,
+      default: "",
+    },
+    audioDuration: {
+      type: Number,
+      default: 0,
+    },
+    location: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+      address: { type: String, default: "" },
+    },
+    poll: {
+      question: { type: String, default: "" },
+      options: [pollOptionSchema],
     },
     status: {
       type: String,

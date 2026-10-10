@@ -54,8 +54,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md p-6 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl text-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-md max-h-[92vh] overflow-y-auto p-5 sm:p-6 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl text-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-700">
           <h2 className="text-xl font-bold text-white tracking-wide">

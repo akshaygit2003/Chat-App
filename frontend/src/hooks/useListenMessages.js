@@ -11,6 +11,7 @@ const useListenMessages = () => {
     selectedConversation,
     setIsTyping,
     markAllRead,
+    updatePoll,
   } = useConversation();
 
   useEffect(() => {
@@ -52,16 +53,22 @@ const useListenMessages = () => {
       }
     };
 
+    const handlePollUpdated = ({ messageId, poll }) => {
+      updatePoll(messageId, poll);
+    };
+
     socket.on("newMessage", handleNewMessage);
     socket.on("userTyping", handleUserTyping);
     socket.on("userStoppedTyping", handleUserStoppedTyping);
     socket.on("messagesRead", handleMessagesRead);
+    socket.on("pollUpdated", handlePollUpdated);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("userTyping", handleUserTyping);
       socket.off("userStoppedTyping", handleUserStoppedTyping);
       socket.off("messagesRead", handleMessagesRead);
+      socket.off("pollUpdated", handlePollUpdated);
     };
   }, [
     socket,
@@ -70,6 +77,7 @@ const useListenMessages = () => {
     selectedConversation,
     setIsTyping,
     markAllRead,
+    updatePoll,
   ]);
 };
 
