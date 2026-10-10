@@ -43,6 +43,7 @@ const SignUp = () => {
               placeholder="John Doe"
               className="w-full input input-bordered h-10"
               value={inputs.fullName}
+              autoComplete="name"
               onChange={(e) =>
                 setInputs({ ...inputs, fullName: e.target.value })
               }
@@ -58,6 +59,7 @@ const SignUp = () => {
               placeholder="johndoe"
               className="w-full input input-bordered h-10"
               value={inputs.username}
+              autoComplete="username"
               onChange={(e) =>
                 setInputs({ ...inputs, username: e.target.value })
               }
@@ -73,6 +75,7 @@ const SignUp = () => {
               placeholder="Enter Password"
               className="w-full input input-bordered h-10"
               value={inputs.password}
+              autoComplete="new-password"
               onChange={(e) =>
                 setInputs({ ...inputs, password: e.target.value })
               }
@@ -88,6 +91,7 @@ const SignUp = () => {
               placeholder="Confirm Password"
               className="w-full input input-bordered h-10"
               value={inputs.confirmPassword}
+              autoComplete="new-password"
               onChange={(e) =>
                 setInputs({ ...inputs, confirmPassword: e.target.value })
               }

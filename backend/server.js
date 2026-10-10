@@ -24,6 +24,7 @@ app.use(
   helmet({
     crossOriginResourcePolicy: false,
     contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   })
 );
 
