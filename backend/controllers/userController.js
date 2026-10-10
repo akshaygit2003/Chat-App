@@ -1,13 +1,8 @@
 import User from "../models/user.js";
+import AppError from "../utils/AppError.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
-//find every user in the database except for the authenticated user
-// $ne operator selects all documents where the _id field is not equal to the specified value.
-// select("-password") excludes the password field from the returned documents.  // NOT REFERENCE BUT ACTUAL USER DATA
-// await keyword is used to make sure the execution of the code stops until the promise is resolved.
-// If an error occurs during the execution, it will be caught and handled by the catch block.
-// findOne() returns the first document that matches the query, or null if no match is found.
-
-export const getUsersForSidebar = async (req, res) => {
+export const getUsersForSidebar = async (req, res, next) => {
   try {
     const loggedInUserId = req.user._id;
 
@@ -17,7 +12,62 @@ export const getUsersForSidebar = async (req, res) => {
 
     res.status(200).json(filteredUsers);
   } catch (error) {
-    console.error("Error in getUsersForSidebar: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    next(error);
+  }
+};
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { fullName, bio, gender } = req.body;
+    const userId = req.user._id;
+
+    const updateFields = {};
+    if (fullName !== undefined) updateFields.fullName = fullName.trim();
+    if (bio !== undefined) updateFields.bio = bio.trim();
+    if (gender !== undefined) updateFields.gender = gender;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return next(new AppError("User not found", 404));
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatar = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    if (!req.file) {
+      return next(new AppError("Please select an image file to upload", 400));
+    }
+
+    const secureUrl = await uploadToCloudinary(
+      req.file.buffer,
+      req.file.mimetype,
+      "chat-app-avatars"
+    );
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: { profilePic: secureUrl } },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return next(new AppError("User not found", 404));
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
   }
 };

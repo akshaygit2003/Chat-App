@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getInitials, getAvatarGradient } from "../utils/avatar";
 
 const Avatar = ({
@@ -7,12 +7,16 @@ const Avatar = ({
   isOnline = false,
   size = "w-12 h-12 text-base",
   className = "",
-  preferInitials = true,
+  preferInitials = false,
 }) => {
   const [imgError, setImgError] = useState(false);
 
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
   const isBrokenSrc = !src || src.includes("iran.liara.run");
-  const showImage = !preferInitials && !isBrokenSrc && !imgError;
+  const showImage = !preferInitials && Boolean(src) && !isBrokenSrc && !imgError;
   const initials = getInitials(name);
   const gradient = getAvatarGradient(name || "default");
 
@@ -23,16 +27,17 @@ const Avatar = ({
       } ${className}`}
     >
       <div
-        className={`rounded-full ${size} ${
+        className={`rounded-full overflow-hidden ${size} ${
           !showImage
             ? `${gradient} text-white font-bold select-none shadow-sm flex items-center justify-center`
-            : ""
+            : "flex items-center justify-center"
         }`}
       >
         {showImage ? (
           <img
             src={src}
             alt={name || "user avatar"}
+            className="w-full h-full object-cover"
             onError={() => setImgError(true)}
           />
         ) : (

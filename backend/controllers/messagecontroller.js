@@ -1,12 +1,17 @@
 import Conversation from "../models/conversation.js";
 import Message from "../models/messages.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
+import AppError from "../utils/AppError.js";
 
-export const sendMessage = async (req, res) => {
+export const sendMessage = async (req, res, next) => {
   try {
     const { message } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
+
+    if (!message || message.trim() === "") {
+      return next(new AppError("Message content cannot be empty", 400));
+    }
 
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
@@ -19,51 +24,91 @@ export const sendMessage = async (req, res) => {
     }
 
     const newMessage = new Message({
+      conversationId: conversation._id,
       senderId,
       receiverId,
       message,
     });
 
-    if (newMessage) {
-      conversation.messages.push(newMessage._id);
-    }
+    // Update conversation last message snippet and maintain backwards compatibility
+    conversation.lastMessage = {
+      text: message,
+      senderId,
+      createdAt: newMessage.createdAt || new Date(),
+    };
+    conversation.messages.push(newMessage._id);
 
-    // await conversation.save();
-    // await newMessage.save();
-
-    // this will run in parallel
     await Promise.all([conversation.save(), newMessage.save()]);
 
-    // SOCKET IO FUNCTIONALITY WILL GO HERE
+    // Realtime notification via Socket.io
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      // io.to(<socket_id>).emit() used to send events to specific client
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    next(error);
   }
 };
 
-export const getMessages = async (req, res) => {
+export const getMessages = async (req, res, next) => {
   try {
     const { id: userToChatId } = req.params;
     const senderId = req.user._id;
+    const { cursor, paginated } = req.query;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 30, 1), 100);
 
     const conversation = await Conversation.findOne({
       participants: { $all: [senderId, userToChatId] },
-    }).populate("messages"); // NOT REFERENCE BUT ACTUAL MESSAGES
+    });
 
-    if (!conversation) return res.status(200).json([]);
+    if (!conversation) {
+      if (paginated === "true" || cursor) {
+        return res.status(200).json({ messages: [], nextCursor: null, hasMore: false });
+      }
+      return res.status(200).json([]);
+    }
 
-    const messages = conversation.messages;
+    // Query messages by conversationId, with fallback to participant matching for legacy records
+    const filter = {
+      $or: [
+        { conversationId: conversation._id },
+        {
+          conversationId: { $exists: false },
+          senderId: { $in: [senderId, userToChatId] },
+          receiverId: { $in: [senderId, userToChatId] },
+        },
+      ],
+    };
 
-    res.status(200).json(messages);
+    if (cursor) {
+      filter._id = { $lt: cursor };
+    }
+
+    // Fetch limit + 1 to calculate hasMore
+    const rawMessages = await Message.find(filter)
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    const hasMore = rawMessages.length > limit;
+    const resultMessages = hasMore ? rawMessages.slice(0, limit) : rawMessages;
+    const nextCursor = hasMore ? resultMessages[resultMessages.length - 1]._id : null;
+
+    // Chronological ordering for client display
+    const chronologicalMessages = [...resultMessages].reverse();
+
+    if (paginated === "true" || cursor) {
+      return res.status(200).json({
+        messages: chronologicalMessages,
+        nextCursor,
+        hasMore,
+      });
+    }
+
+    // Default: returns array directly for complete backwards compatibility
+    res.status(200).json(chronologicalMessages);
   } catch (error) {
-    console.log("Error in getMessages controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    next(error);
   }
 };
