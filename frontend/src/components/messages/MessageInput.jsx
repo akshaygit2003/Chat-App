@@ -331,7 +331,7 @@ const MessageInput = () => {
 
       {/* Active Voice Recording Bar */}
       {isRecording ? (
-        <div className="flex items-center justify-between p-2 sm:p-2.5 bg-slate-800 border border-red-500/40 rounded-2xl shadow-xl animate-fadeIn">
+        <div className="flex items-center justify-between p-2 sm:p-2.5 bg-slate-900/50 backdrop-blur-md border border-red-500/40 rounded-2xl shadow-xl animate-fadeIn">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping shrink-0" />
             <span className="text-red-400 text-xs font-bold tracking-wider uppercase shrink-0">
@@ -367,7 +367,7 @@ const MessageInput = () => {
         /* Standard Message Input Bar */
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-800/90 backdrop-blur-md rounded-2xl border border-slate-700/60 shadow-lg"
+          className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-gray-900/40 backdrop-blur-md rounded-2xl border border-slate-600/40 shadow-lg"
         >
           {/* Emoji Toggle */}
           <button
