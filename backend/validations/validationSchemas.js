@@ -38,7 +38,7 @@ export const sendMessageSchema = z.object({
     id: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid receiver ID format"),
   }),
   body: z.object({
-    message: z.string().trim().min(1, "Message cannot be empty").max(2000, "Message cannot exceed 2000 characters"),
+    message: z.string().trim().max(2000, "Message cannot exceed 2000 characters").optional().default(""),
   }),
 });
 

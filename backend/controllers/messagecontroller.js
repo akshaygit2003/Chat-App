@@ -1,7 +1,8 @@
 import Conversation from "../models/conversation.js";
 import Message from "../models/messages.js";
-import { getReceiverSocketId, io } from "../socket/socket.js";
+import { getReceiverSocketIds, io } from "../socket/socket.js";
 import AppError from "../utils/AppError.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 export const sendMessage = async (req, res, next) => {
   try {
@@ -9,8 +10,21 @@ export const sendMessage = async (req, res, next) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    if (!message || message.trim() === "") {
-      return next(new AppError("Message content cannot be empty", 400));
+    let imageUrl = "";
+
+    // If an image file was attached via multipart/form-data
+    if (req.file) {
+      imageUrl = await uploadToCloudinary(
+        req.file.buffer,
+        req.file.mimetype,
+        "chat-app-messages"
+      );
+    }
+
+    const trimmedMessage = message ? message.trim() : "";
+
+    if (!trimmedMessage && !imageUrl) {
+      return next(new AppError("Please provide a text message or an image", 400));
     }
 
     let conversation = await Conversation.findOne({
@@ -23,16 +37,22 @@ export const sendMessage = async (req, res, next) => {
       });
     }
 
+    // Determine initial delivery status based on receiver online presence
+    const receiverSocketIds = getReceiverSocketIds(receiverId);
+    const initialStatus = receiverSocketIds.length > 0 ? "delivered" : "sent";
+
     const newMessage = new Message({
       conversationId: conversation._id,
       senderId,
       receiverId,
-      message,
+      message: trimmedMessage,
+      image: imageUrl,
+      status: initialStatus,
     });
 
-    // Update conversation last message snippet and maintain backwards compatibility
+    // Update conversation lastMessage snippet
     conversation.lastMessage = {
-      text: message,
+      text: trimmedMessage || "📷 Photo",
       senderId,
       createdAt: newMessage.createdAt || new Date(),
     };
@@ -40,11 +60,10 @@ export const sendMessage = async (req, res, next) => {
 
     await Promise.all([conversation.save(), newMessage.save()]);
 
-    // Realtime notification via Socket.io
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
+    // Broadcast in real-time to all connected devices/tabs of the receiver
+    receiverSocketIds.forEach((sId) => {
+      io.to(sId).emit("newMessage", newMessage);
+    });
 
     res.status(201).json(newMessage);
   } catch (error) {
@@ -108,6 +127,32 @@ export const getMessages = async (req, res, next) => {
 
     // Default: returns array directly for complete backwards compatibility
     res.status(200).json(chronologicalMessages);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markMessagesAsRead = async (req, res, next) => {
+  try {
+    const { id: senderId } = req.params;
+    const receiverId = req.user._id;
+
+    await Message.updateMany(
+      {
+        senderId,
+        receiverId,
+        status: { $ne: "read" },
+      },
+      { $set: { status: "read" } }
+    );
+
+    // Notify the sender across their connected devices
+    const senderSocketIds = getReceiverSocketIds(senderId);
+    senderSocketIds.forEach((sId) => {
+      io.to(sId).emit("messagesRead", { readerId: receiverId });
+    });
+
+    res.status(200).json({ success: true, message: "Messages marked as read" });
   } catch (error) {
     next(error);
   }

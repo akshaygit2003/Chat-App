@@ -8,38 +8,54 @@ import { useSocketContext } from "../../context/SocketContext";
 import Avatar from "../Avatar";
 
 const MessageContainer = () => {
-  const { selectedConversation, setSelectedConversation } = useConversation();
+  const { selectedConversation, setSelectedConversation, isTyping } =
+    useConversation();
   const { onlineUsers } = useSocketContext();
   const isOnline = selectedConversation
     ? onlineUsers.includes(selectedConversation._id)
     : false;
 
   useEffect(() => {
-    // cleanup function (unmounts)
     return () => setSelectedConversation(null);
   }, [setSelectedConversation]);
 
   return (
-    <div className="md:min-w-[450px] flex flex-col">
+    <div className="md:min-w-[450px] flex flex-col flex-1">
       {!selectedConversation ? (
         <NoChatSelected />
       ) : (
         <>
-          {/* Header */}
-          <div className="bg-slate-500 px-4 py-2 mb-2 flex items-center gap-2">
-            <Avatar
-              name={selectedConversation.fullName || selectedConversation.username}
-              src={selectedConversation.profilePic}
-              isOnline={isOnline}
-              size="w-8 h-8 text-xs"
-            />
-            <div className="flex items-center gap-1">
-              <span className="label-text">To:</span>{" "}
-              <span className="text-gray-900 font-bold">
-                {selectedConversation.fullName}
-              </span>
+          {/* Active Chat Header */}
+          <div className="bg-slate-700/80 backdrop-blur-md px-4 py-2.5 mb-2 flex items-center justify-between border-b border-slate-600/50">
+            <div className="flex items-center gap-3">
+              <Avatar
+                name={
+                  selectedConversation.fullName ||
+                  selectedConversation.username
+                }
+                src={selectedConversation.profilePic}
+                isOnline={isOnline}
+                size="w-9 h-9 text-xs"
+              />
+              <div className="flex flex-col">
+                <span className="text-gray-100 font-bold text-sm tracking-wide">
+                  {selectedConversation.fullName}
+                </span>
+                {isTyping ? (
+                  <span className="text-blue-400 text-xs animate-pulse font-medium">
+                    typing...
+                  </span>
+                ) : isOnline ? (
+                  <span className="text-emerald-400 text-xs font-medium">
+                    Online
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-xs">Offline</span>
+                )}
+              </div>
             </div>
           </div>
+
           <Messages />
           <MessageInput />
         </>
@@ -47,6 +63,7 @@ const MessageContainer = () => {
     </div>
   );
 };
+
 export default MessageContainer;
 
 const NoChatSelected = () => {
@@ -59,9 +76,11 @@ const NoChatSelected = () => {
           src={authUser?.profilePic}
           size="w-16 h-16 text-xl"
         />
-        <p>Welcome 👋 {authUser?.fullName} ❄</p>
-        <p>Select a chat to start messaging</p>
-        <TiMessages className="text-3xl md:text-6xl text-center" />
+        <p>Welcome 👋 {authUser?.fullName}</p>
+        <p className="text-sm font-normal text-gray-400">
+          Select a conversation from the sidebar to start chatting
+        </p>
+        <TiMessages className="text-3xl md:text-6xl text-blue-400 mt-2" />
       </div>
     </div>
   );
