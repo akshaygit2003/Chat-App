@@ -31,7 +31,7 @@ export const signup = async (req, res, next) => {
       profilePic: "",
     });
 
-    generateTokenAndSetCookie(newUser._id, res);
+    const token = generateTokenAndSetCookie(newUser._id, res);
 
     res.status(201).json({
       _id: newUser._id,
@@ -41,6 +41,7 @@ export const signup = async (req, res, next) => {
       profilePic: newUser.profilePic,
       bio: newUser.bio,
       gender: newUser.gender,
+      token,
     });
   } catch (error) {
     next(error);
@@ -57,7 +58,7 @@ export const login = async (req, res, next) => {
       return next(new AppError("Invalid username or password", 400));
     }
 
-    generateTokenAndSetCookie(user._id, res);
+    const token = generateTokenAndSetCookie(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -67,6 +68,7 @@ export const login = async (req, res, next) => {
       profilePic: user.profilePic,
       bio: user.bio,
       gender: user.gender,
+      token,
     });
   } catch (error) {
     next(error);
@@ -122,7 +124,7 @@ export const googleAuth = async (req, res, next) => {
       });
     }
 
-    generateTokenAndSetCookie(user._id, res);
+    const token = generateTokenAndSetCookie(user._id, res);
 
     res.status(200).json({
       _id: user._id,
@@ -132,6 +134,7 @@ export const googleAuth = async (req, res, next) => {
       profilePic: user.profilePic,
       bio: user.bio,
       gender: user.gender,
+      token,
     });
   } catch (error) {
     next(error);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, getAuthHeaders } from "../utils/api";
 
 const useUpdateProfile = () => {
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,10 @@ const useUpdateProfile = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/users/profile`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         credentials: "include",
         body: JSON.stringify({ fullName, bio, gender }),
       });
@@ -54,6 +57,9 @@ const useUpdateProfile = () => {
       const res = await fetch(`${API_BASE_URL}/api/users/profile/avatar`, {
         method: "POST",
         credentials: "include",
+        headers: {
+          ...getAuthHeaders(),
+        },
         body: formData,
       });
 

@@ -22,6 +22,7 @@ export const SocketContextProvider = ({ children }) => {
         (import.meta.env.MODE === "development" ? "http://localhost:5000" : "/");
       const socket = io(backendUrl, {
         query: { userId: authUser._id },
+        auth: { token: authUser.token },
         autoConnect: true,
         reconnection: true,
         reconnectionAttempts: 5,

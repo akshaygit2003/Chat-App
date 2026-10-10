@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import useConversation from "../zustand/useConversation";
 import toast from "react-hot-toast";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, getAuthHeaders } from "../utils/api";
 import { useSocketContext } from "../context/SocketContext";
 
 const useGetMessages = () => {
@@ -27,6 +27,9 @@ const useGetMessages = () => {
           `${API_BASE_URL}/api/messages/${selectedConversation._id}?paginated=true&limit=30`,
           {
             credentials: "include",
+            headers: {
+              ...getAuthHeaders(),
+            },
           }
         );
         const data = await res.json();
@@ -47,6 +50,9 @@ const useGetMessages = () => {
         fetch(`${API_BASE_URL}/api/messages/read/${selectedConversation._id}`, {
           method: "PUT",
           credentials: "include",
+          headers: {
+            ...getAuthHeaders(),
+          },
         }).catch(() => {});
       } catch (error) {
         toast.error(error.message);
@@ -66,6 +72,9 @@ const useGetMessages = () => {
         `${API_BASE_URL}/api/messages/${selectedConversation._id}?cursor=${nextCursor}&paginated=true&limit=30`,
         {
           credentials: "include",
+          headers: {
+            ...getAuthHeaders(),
+          },
         }
       );
       const data = await res.json();

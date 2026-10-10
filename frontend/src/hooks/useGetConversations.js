@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, getAuthHeaders } from "../utils/api";
 import { useAuthContext } from "../context/AuthContext";
 
 const useGetConversations = () => {
@@ -15,6 +15,9 @@ const useGetConversations = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/users`, {
           credentials: "include",
+          headers: {
+            ...getAuthHeaders(),
+          },
         });
 
         if (res.status === 401) {

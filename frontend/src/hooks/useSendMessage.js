@@ -2,7 +2,7 @@ import { useState } from "react";
 import useConversation from "../zustand/useConversation";
 import { useAuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, getAuthHeaders } from "../utils/api";
 
 const useSendMessage = () => {
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,9 @@ const useSendMessage = () => {
           {
             method: "POST",
             credentials: "include",
+            headers: {
+              ...getAuthHeaders(),
+            },
             body: formData,
           }
         );
@@ -49,7 +52,10 @@ const useSendMessage = () => {
           `${API_BASE_URL}/api/messages/send/${selectedConversation._id}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              ...getAuthHeaders(),
+            },
             credentials: "include",
             body: JSON.stringify({ message: messageText }),
           }
